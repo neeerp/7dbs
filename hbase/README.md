@@ -97,6 +97,7 @@ hbase> delete 'table', 'row_key'
 
 
 > 2. Bookmark the HBase API documentation for the version of HBase you're using.
+
 I'm ahead of the book on this one (I found the [API
 docs](https://hbase.apache.org/2.5/devapidocs/overview-summary.html) in my
 struggles above).
