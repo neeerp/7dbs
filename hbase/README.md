@@ -150,11 +150,57 @@ hbase:024:0>
 
 > 1. Find a discussion or article describing the pros and cons of compression in HBase
 
+Here's a
+[paper](https://www.academia.edu/download/75146228/Paper_47-Impact_of_Data_Compression_on_the_Performance_of_Column.pdf)
+discussing different compression algorithms used by HBase, and here's an
+[article](https://community.cloudera.com/t5/Community-Articles/Compression-in-HBase/ta-p/247244)
+on Cloudera's community website contrasting the differnet compression
+algorithms.
+
+The obvious upside of compression is the reduced memory and storage
+requirements. Apparently, CPU usage does not increase significantly when
+compression is used, and many operations can be performed directly on the
+compressed data!
+
+Downsides may include increased difficulty in use. For example, the LZO
+algorithm cannot be bundled with HBase by default, and this has apparently
+caused problems/outages when spinning up new clusters! Moreover, one must
+reason about which algorithm to use for the data at hand, as poor choices may
+have negative performance (and even space usage) implications. It looks like
+the use of compression shifts additional complexity and considerations on the
+programmer.
+
 > 2. Find an article explaining how Bloom filters work in General and how they benefit HBase.
+
+I found this random Linked In article in my top google results:
+[link](https://www.linkedin.com/pulse/bloom-filters-hbase-kuldeep-deshpande/).
+
+From the sounds of it, HBase uses bloom filters in-memory when trying to
+determine where a row is stored in order to avoid having to perform disk IO to
+check whether a file contains the row.
+
+As for how Bloom Filters work in general... I think the book described them
+already, though I already knew from an undergrad data structures course. The
+gist of it is that it's a probabilistic membership test; it has no false
+negatives but instead may produce false positives. To insert a value, you hash
+the value and flip the corresponding bits in a long bit array to 1. To test
+membership of a value, you hash the value and check if the corresponding bits
+are already all 1.
 
 > 3. Aside from the algorithm, what other column family options relate to compression?
 
+The Data Block Encoding option (`DATA_BLOCK_ENCODING`) is directly relevant; see the [HBase Docs on Compression](https://hbase.apache.org/book.html#compression).
+
 > 4. How does the type of data and expected usage patterns inform column family compression options?
+
+See ['Which Compressor or Data Block Encoder To Use'](https://hbase.apache.org/book.html#data.block.encoding.types) in the HBase Docs. This [message](https://lists.apache.org/thread/85ymv1vnw13szxq1o1mhkm815pv47t73) in an email thread gives a very brief summary:
+
+> So as a general guideline I'd say:
+> o If you have long keys (compared to the values) or many columns, use a prefix encoder. Only use FAST_DIFF.
+> o If the values are large (and not precompressed as in images), use a block compressor (SNAPPY, LZO, GZIP, etc)
+> o Use GZIP for cold data
+> o Use SNAPPY or LZO for hot data.
+> o In most cases you do want to enable SNAPPY or LZO by default (low perf overhead + space savings).
 
 #### Do
 
