@@ -270,3 +270,40 @@ COLUMN                                                 CELL
 Took 0.0329 seconds
 ```
 
+## Day 3
+We get to set up our own EMR cluster! Fun!
+
+### Homework
+#### Find
+> 1. Use the help interface `aws` for the CLI tool to see which commands
+>    are available for the `emr` subcommand. Read through the help
+>    material for some of these commands to get a sense of some of the
+>    capabilities offered by EMR that we didn't cover in today's cluster
+>    building exercise. Pay special attention to scaling-related commands.
+
+Running `aws emr help` gives us a man page on EMR. Running `aws emr <command>
+help` in turn gives us a man page on the subcommands. I looked up some commands
+while waiting for my cluster to spin up.
+
+
+> 2. Go to the EMR documentation and read up on how to use S3 as a data
+>    store for HBase clusters.
+
+
+#### DO
+
+> 1. In your HBase shell that you're accessing via SSH, run some of the
+>    cluster metadata commands we explored on Day 2 such as `scan
+>    'hbase:meta'`. MAke note of anything that's fundamentally different
+>    from what we saw on the locally running standalone HBase.
+
+> 2. Navigate around the EMR section of your AWS browser console and find
+>    the console specific to your running HBase cluster. Resize your
+>    cluster down to just two machiens by removing one of the slave nodes
+>    (aka 'core' nodes). Then increase the cluster size back to three.
+
+> 3. Resizing a cluster in the AWS console is nice, but that's not an
+>    automatable approach. The `aws` CLI tool enables you to resize a
+>    cluster programmatically. Consult the docs for `emr
+>    modify-instance-groups` to find out how it works. Remove a machine
+>    from your cluster using that command!
