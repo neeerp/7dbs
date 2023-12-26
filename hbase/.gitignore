@@ -1,3 +1,7 @@
+# Data
+food/
+
+# Hbase binaries
 hbase-2.5.6/
 hbase-operator-tools-1.2.0/
 

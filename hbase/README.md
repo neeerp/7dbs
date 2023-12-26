@@ -170,8 +170,57 @@ hbase:024:0>
 >    What should be the row key? What column family options make sense for this
 >    data?
 
+The row key should probably be the `Display_Name` attribute.
+
+```
+hbase:001:0> create 'foods', { NAME => 'fact', VERSIONS => 1, BLOOMFILTER => 'ROWCOL' }
+Created table foods
+Took 0.9145 seconds
+=> Hbase::Table - foods
+hbase:002:0>
+```
+
 
 > 2. Create a new JRuby script to import the food data; use the streaming XML parsing style we used earlier.
 
+See `parse_food.rb`.
+
 > 3. Using the HBase shell, query the `foods` table for information about your favourite foods.
+I had to enumerate the row keys using `count 'foods', { INTERVAL => 1 }` (per
+[Stack
+Overflow](https://stackoverflow.com/questions/5218085/how-to-list-all-row-keys-in-an-hbase-table)) to find
+the row key for a food. Not my favourite food, but check out sesame seeds:
+
+```
+hbase:006:0> get 'foods', 'Sesame seeds'
+COLUMN                                                 CELL
+ fact:Added_Sugars                                     timestamp=2023-12-26T11:57:49.697, value=.00000
+ fact:Alcohol                                          timestamp=2023-12-26T11:57:49.697, value=.00000
+ fact:Calories                                         timestamp=2023-12-26T11:57:49.697, value=212.62500
+ fact:Display_Name                                     timestamp=2023-12-26T11:57:49.697, value=Sesame seeds
+ fact:Drkgreen_Vegetables                              timestamp=2023-12-26T11:57:49.697, value=.00000
+ fact:Drybeans_Peas                                    timestamp=2023-12-26T11:57:49.697, value=.00000
+ fact:Factor                                           timestamp=2023-12-26T11:57:49.697, value=.25000
+ fact:Food_Code                                        timestamp=2023-12-26T11:57:49.697, value=43103000
+ fact:Fruits                                           timestamp=2023-12-26T11:57:49.697, value=.00000
+ fact:Grains                                           timestamp=2023-12-26T11:57:49.697, value=.00000
+ fact:Increment                                        timestamp=2023-12-26T11:57:49.697, value=.25000
+ fact:Meats                                            timestamp=2023-12-26T11:57:49.697, value=2.64562
+ fact:Milk                                             timestamp=2023-12-26T11:57:49.697, value=.00000
+ fact:Multiplier                                       timestamp=2023-12-26T11:57:49.697, value=1.00000
+ fact:Oils                                             timestamp=2023-12-26T11:57:49.697, value=2.45383
+ fact:Orange_Vegetables                                timestamp=2023-12-26T11:57:49.697, value=.00000
+ fact:Other_Vegetables                                 timestamp=2023-12-26T11:57:49.697, value=.00000
+ fact:Portion_Amount                                   timestamp=2023-12-26T11:57:49.697, value=.25000
+ fact:Portion_Default                                  timestamp=2023-12-26T11:57:49.697, value=1.00000
+ fact:Portion_Display_Name                             timestamp=2023-12-26T11:57:49.697, value=cup
+ fact:Saturated_Fats                                   timestamp=2023-12-26T11:57:49.697, value=2.52000
+ fact:Solid_Fats                                       timestamp=2023-12-26T11:57:49.697, value=.00000
+ fact:Soy                                              timestamp=2023-12-26T11:57:49.697, value=.00000
+ fact:Starchy_vegetables                               timestamp=2023-12-26T11:57:49.697, value=.00000
+ fact:Vegetables                                       timestamp=2023-12-26T11:57:49.697, value=.00000
+ fact:Whole_Grains                                     timestamp=2023-12-26T11:57:49.697, value=.00000
+1 row(s)
+Took 0.0329 seconds
+```
 
