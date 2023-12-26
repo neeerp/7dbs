@@ -144,3 +144,34 @@ hbase:024:0>
 ```
 
 
+## Day 2
+### Homework
+#### Find
+
+> 1. Find a discussion or article describing the pros and cons of compression in HBase
+
+> 2. Find an article explaining how Bloom filters work in General and how they benefit HBase.
+
+> 3. Aside from the algorithm, what other column family options relate to compression?
+
+> 4. How does the type of data and expected usage patterns inform column family compression options?
+
+#### Do
+
+> Downlad the food pyramid dataset
+> [here](https://inventory.data.gov/dataset/794cd3d7-4d28-4408-8f7d-84b820dbf7f2/resource/6b78ec0c-4980-4ad8-9cbd-2d6eb9eda8e7/download/myfoodapediadata.zip)
+> (the link in the book was dead).
+> 
+> This data consists of pairs of `<Food_Display_Row>` tags; each row has an
+> integer `<Food_Code>` and string `Display_Name`, and other facts in various
+> tags.
+
+> 1. Create a table called `foods` with a single column family to store facts.
+>    What should be the row key? What column family options make sense for this
+>    data?
+
+
+> 2. Create a new JRuby script to import the food data; use the streaming XML parsing style we used earlier.
+
+> 3. Using the HBase shell, query the `foods` table for information about your favourite foods.
+
