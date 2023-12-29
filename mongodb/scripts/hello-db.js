@@ -30,6 +30,8 @@ async function run() {
         { projection: { hello: true, _id: false } },
       ),
     );
+
+    console.log(await hello.createIndex("hello"));
   } finally {
     client.close();
   }
