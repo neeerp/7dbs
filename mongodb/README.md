@@ -203,3 +203,102 @@ results = db.runCommand({
 >    populate a collection through it, and index one of the fields.
 
 See `hello-db.js`.
+
+## Day 3
+Interesting notes:
+- When I reduced my replica set from 3 instances to 1, the last instance didn't
+  get promoted to be the primary! Reducing from 3 -> 2 by removing the primary
+  did result in a new primary being elected. Maybe this is a result of the fact
+  that there needs to be a majority of the RS in the 'partition' of the
+  network; 1 is not a majority (whereas 2 is).
+    - Mongo aligns with 'CP' (from 'CAP') in this regard!
+- Had to run `mongoimport` with the `--legacy` flag for it to work on the book data.
+
+### Homework
+#### Find
+> 1. Read the full replica set configuration options in the online docs.
+
+Here are the aforementioned
+[docs](https://www.mongodb.com/docs/v7.2/reference/replica-configuration/). I
+skimmed it from top to bottom, promise!
+
+> 2. Find out how to create a spherical geo index.
+
+It's as simple as specifying `2dsphere` instead of `2d` for the index type: see
+[docs](https://www.mongodb.com/docs/manual/core/indexes/index-types/geospatial/2dsphere/#std-label-2dsphere-index).
+
+#### Do
+> 1. Mongo has support for bounding shapes; find all cities within a 50-mile radius around the center of London.
+
+Here's a `mongosh` query accomplishing just that. I followed [this
+example](https://www.mongodb.com/docs/manual/core/indexes/index-types/geospatial/2d/calculate-distances/#convert-miles-to-radians)
+in the docs.
+```js
+db.cities.find({location: {$geoWithin: { $centerSphere: [[51.50, -0.12], 50 / 3963.2 ]}}})
+```
+
+> 2. Run six servers:
+>  - Three in a replica set
+>  - Each replica set is one of two shards
+> Also run a config server and `mongos`. Run GridFS across them.
+
+In the shell:
+```sh
+mongod --configsvr --replSet configSet --dbpath conf --port 30001
+mongos --configdb  configSet/localhost:30001 --port 40001
+
+mongod --replSet r1 --dbpath ./mongo1 --port 27011 --shardsvr
+mongod --replSet r1 --dbpath ./mongo2 --port 27012 --shardsvr
+mongod --replSet r1 --dbpath ./mongo3 --port 27013 --shardsvr
+mongod --replSet r2 --dbpath ./mongo4 --port 27014 --shardsvr
+mongod --replSet r2 --dbpath ./mongo5 --port 27015 --shardsvr
+mongod --replSet r2 --dbpath ./mongo6 --port 27016 --shardsvr
+
+```
+
+On the config server:
+```js
+test> rs.initiate()
+```
+
+On a server for the first replication set (similar command ran on a server from the other set as well):
+```js
+rs.initiate({ _id: 'r1', members: [ { _id: 0, host: 'localhost:27011'}, {_id: 1, host: 'localhost:27012'}, {_id: 2, host: 'localhost:27013'}]})
+```
+
+On the `mongos` server:
+```js
+sh.addShard('r1/localhost:27011')
+sh.addShard('r1/localhost:27012')
+sh.addShard('r1/localhost:27013')
+
+sh.addShard('r2/localhost:27014')
+sh.addShard('r2/localhost:27015')
+sh.addShard('r2/localhost:27016')
+
+use admin
+db.runCommand({ enableSharding: "test" })
+```
+
+In the shell again, we add a file to GridFS:
+```sh
+mongofiles -h localhost:40001 put just-some-data.txt
+```
+
+And now we check both replication sets via `mongosh` on a server from each:
+
+It's not in the first shard...
+```
+r1 [direct: primary] test> show collections
+
+r1 [direct: primary] test>
+```
+
+But it is in the second!
+```
+r2 [direct: primary] test> show collections
+fs.chunks
+fs.files
+r2 [direct: primary] test>
+```
+
