@@ -125,3 +125,67 @@ curl -u admin:couchdb -XPUT ${COUCH_ROOT_URL}/music/1f89a45e8a4d600a5c50907a3c00
 curl -u admin:couchdb ${COUCH_ROOT_URL}/music/1f89a45e8a4d600a5c50907a3c0076fa/attached.txt 
 This is my attachment!\nCool, huh?%
 ```
+
+## Day 2
+Some notes include...
+- I was unable to get the XML Album dump from the URL in the book, but
+  luckily the wayback machine had a backup:
+  [link](https://archive.org/download/JamendoXMLDump).
+- I lost my mind trying to install `libxml-ruby`, and later, different versions
+  of `ruby` in general. Both fail to compile, and nothing I've tried works. I
+  ended up using `nokogiri` instead, since I can at least install the gem and
+  use it with my system ruby.
+
+### Homework
+#### Find
+> 1. We've seen `emit` outputting string keys. What other keys types can it
+>    support? What happens when you emit an array as a key?
+
+According to the docs on views... "...you can place whatever you like in the
+key parameter to the `emite()` function."
+([source](https://docs.couchdb.org/en/stable/ddocs/views/intro.html#find-one)).
+
+When you use an array in the key, you've created a "complex key". CouchDB still
+has a well defined sort order on such keys, though the docs literally say the
+rules for this are not documented:
+[source](https://docs.couchdb.org/en/stable/ddocs/views/joins.html#optimization-using-the-power-of-view-collation).
+
+
+
+> 2. Find a list of available URL parameters that can be appended to view
+>    requests. What do they do?
+
+Here's the [api ref](https://docs.couchdb.org/en/stable/api/ddoc/views.html)
+for the view resource. There are quite a lot of parameters, though some are
+aliases (e.g. `startkey` and `start_key`). Here's a few options:
+- `startkey`/`endkey`: returns records with keys in the given range
+- `startkey_docid`/`endkey_docid`: are similar, but based off document ids instead
+- `conflicts`: include conflicts information in the response
+- `descending`: does the obvious
+- `group`: Groups results using a `reduce`
+- `attachments`: include base64 encoded content of any attachments in the documents
+- `att_encoding_info`: include attachment encoding info
+- `inclusive_end`: whether the specified end key should be included in the result
+- `skip`: offset into the result list
+- `sorted`: whether to sort returned rows
+
+#### Do
+> 1. The import script `import_from_jamendo.rb` assigned a random number to
+>    each artist. Create a mapper function that emits key/value pairs where hte
+>    key is the random number and the value is the band's name; save this in a
+>    new design document named `_design/random` with the index name `artist`.
+
+Done using the function `artistsByRandomKey` in `js-scripts/mappers.js`.
+
+> 2. Craft a cURL request that will retrieve a random arist.
+
+See the `d2-hw-q2` case in `./curl_helper.sh`.
+
+> 3. The import script also added a `random` property for each album, track,
+>    and tag. Create three additional views in the `_design/random` design
+>    document with the index names `album`, `track`, and `tag` to match the
+>    earlier `artist` view.
+
+
+
+
