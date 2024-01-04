@@ -188,4 +188,59 @@ See the `d2-hw-q2` case in `./curl_helper.sh`.
 
 
 
+## Day 3
+### Homework
+#### Find
+> 1. What native reducers are available in CouchDB? What are the benefits
+>    of using native reducers over custom JavaScript reducers?
+
+Looking at the UI, we have `_sum`, `_count`, `_stats`, and
+`_approx_count_distinct`. The docs for these builtins are found
+[here](https://docs.couchdb.org/en/stable/ddocs/ddocs.html#built-in-reduce-functions);
+these builtins are implemented natively in Erlang and run within CouchDB,
+hence they are much faster than custom supplied JavaScript functions.
+
+> 2. How can you filter changes coming out of the `_changes` API on the
+>    server side?
+
+Per the
+[docs](https://docs.couchdb.org/en/stable/api/database/changes.html#filtering),
+there are two builtin filters: `_doc_ids` and `_selector`. The former
+accepts only a document ID, while the latter accepts the 'selector syntax'
+defined
+[here](https://docs.couchdb.org/en/stable/api/database/find.html#selector-syntax).
+
+> 3. Like everything in CouchDB, the tasks of initializing and canceling
+>    replication are controlled by HTTP commands under the hood. What are
+>    the REST commands to set up and remove replication relationships
+>    between servers?
+
+Per these [docs](https://docs.couchdb.org/en/stable/replication/replicator.html), the `_replicator` database is a special database whose
+documents trigger replications. You can `PUT` a document to this databse
+to set up a replication relationship, and you can also `DELETE` the
+document to remove the relationship.
+
+> 4. How can you use the `_replicator` database to persist replication
+>    relationships?
+
+Assuming 'persist' means to continuously replicate, then if one specifies
+`continuous: true` when creating a replication relationship, the
+replication will continue indefinitely.
+
+
+#### Do
+> 1. Create a new module called `watchChangesContinuous.js` as we did
+>    previously.
+> 2. Implement `watcher.start` such that it monitors the continuous
+>    `_changes` feed. Confirm that it produces the same output as the long
+>    polling approach.
+
+See `watchChangesContinuous.js`
+
+> 3. Documents with conflicting revisions have a `_conflicts` property;
+>    create a view that emits conflicting revisions and maps them to the
+>    doc `_id`.
+
+See `mappers.js`.
+
 

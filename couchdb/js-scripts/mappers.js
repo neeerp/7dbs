@@ -75,3 +75,19 @@ function tagsByRandomKey(doc) {
     }
   }
 }
+
+function tagsByName(doc) {
+  for (album of doc.albums || []) {
+    for (track of album.tracks || []) {
+      for (tag of track.tags || []) {
+        emit(tag.idstr, 1);
+      }
+    }
+  }
+}
+
+function conflictedDocsByRevisions(doc) {
+  if ("_conflicts" in doc) {
+    emit(doc._conflicts, doc._id);
+  }
+}

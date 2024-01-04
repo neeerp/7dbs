@@ -40,6 +40,46 @@ case $example in
     RAND=$(ruby -e 'puts rand')
     curl -u $USER:$PASS "${COUCH_ROOT_URL}/music/_design/random/_view/artist?limit=1&startkey=${RAND}" | jq
     ;;
+  d3-poll-changes)
+    curl -u $USER:$PASS "${COUCH_ROOT_URL}/music/_changes" | jq
+    ;;
+  d3-poll-changes-since)
+    curl -u $USER:$PASS "${COUCH_ROOT_URL}/music/_changes?since=27210-g1AAAACdeJzLYWBgYMpgLhdMzi9NzkhJcjA0MtczAELDHJBMIkNS_f___7MymJMYGEyjcoFi7CaWyUaWFoZYtOA2J48FSDI0AKn_cONMPoCNMzC1SDZOTcWiMwsAwGMqKA" | jq
+    ;;
+  d3-longpoll)
+    curl -u $USER:$PASS "${COUCH_ROOT_URL}/music/_changes?feed=longpoll&since=27213-g1AAAACdeJzLYWBgYMpgLhdMzi9NzkhJcjA0MtczAELDHJBMIkNS_f___7MymJMYGExjc4Fi7CaWyUaWFoZYtOA2J48FSDI0AKn_cONMPoCNMzC1SDZOTcWiMwsAwbMqKw" | jq
+    ;;
+  d3-continuous)
+    curl -u $USER:$PASS "${COUCH_ROOT_URL}/music/_changes?feed=continuous&since=27213-g1AAAACdeJzLYWBgYMpgLhdMzi9NzkhJcjA0MtczAELDHJBMIkNS_f___7MymJMYGExjc4Fi7CaWyUaWFoZYtOA2J48FSDI0AKn_cONMPoCNMzC1SDZOTcWiMwsAwbMqKw"
+    ;;
+  d3-create-wherabouts)
+    curl -u $USER:$PASS -XPUT "${COUCH_ROOT_URL}/music/_design/wherabouts" \
+      -H "Content-Type: application/json" \
+      -d '{"language":"javascript","filters":{"by_country":"function(doc,req){return doc.country === req.query.country;}"}}'
+    ;;
+  d3-wherabouts-rus)
+    curl -u $USER:$PASS "${COUCH_ROOT_URL}/music/_changes?filter=wherabouts/by_country&country=RUS"
+    ;;
+  d3-conflict-1)
+    curl -u $USER:$PASS -XPUT "${COUCH_ROOT_URL}/music-repl/theconflicts" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "_id": "theconflicts",
+        "_rev": "1-e007498c59e95d23912be35545049174",
+        "name": "The Conflicts",
+        "albums": ["Conflicts of Interest"]
+      }'
+    ;;
+  d3-conflict-2)
+    curl -u $USER:$PASS -XPUT "${COUCH_ROOT_URL}/music/theconflicts" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "_id": "theconflicts",
+        "_rev": "1-e007498c59e95d23912be35545049174",
+        "name": "The Conflicts",
+        "albums": ["Conflicting Opinions"]
+      }'
+    ;;
   *)
     echo "Example $example does not exist."
     ;;
