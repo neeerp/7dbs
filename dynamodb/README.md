@@ -122,3 +122,65 @@ An error occurred (ConditionalCheckFailedException) when calling the PutItem ope
 request failed
 ```
 
+## Day 2
+### Homework
+#### Find
+> 1. Read some docs for the DynamoDB Streams Feature; can you think of a
+>    compelling use case for this feature?
+
+One use case could be to audit changes in the table. Another use case
+could be to trigger workflows upon a change in the database (regardless of
+the originator of the change). As an example, once some item is updated,
+you could trigger a notification to be published to an SNS topic to
+broadcast to whoever might care about that item.
+
+> 2. Find one or more DynamoDB client libraries for your favorite
+>    programming language. Explore how to perform CRUD operations using
+>    that library.
+
+Actually, we've already done this today. In fact, I had to migrate the
+book's script from the JS AWS SDK v2 to v3! Take a look at the
+`ProcessKinesisRecord.js` script; the same way we used the `PutCommand`,
+we can also run other commands such as `DeleteCommand`, `QueryCommand`,
+`ScanCommand`, etc... See several examples
+[here](https://docs.aws.amazon.com/sdk-for-javascript/v3/developer-guide/javascript_dynamodb_code_examples.html).
+
+> 3. DynamoDB supports object expiry using TTL. Find some docs on TTL and
+>    think of some use cases for it.
+
+I've used TTL here when storing metadata for open websocket connections.
+Generally speaking, it can be useful any time you're storing temporary
+data for some process that might fail in such a way that it cannot clean
+up after itself. The docs also mention it's a more cost effective way to
+delete things, which is true given that you don't need to send an explicit
+delete command!
+
+See the [docs](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/TTL.html).
+
+#### Do
+> 1. One way to improve the performance of Kinesis is to write records to
+>    different partitions. Find some docs on partitioning Kinesis and
+>    think of a stream partitioning scheme that would work with our sensor
+>    data model.
+
+
+Here's some
+[docs](https://docs.aws.amazon.com/streams/latest/dev/key-concepts.html#partition-key)
+on Kinesis partition keys. I think a natural partitioning scheme would be
+to partition on the sensorId.
+
+> 2. Modify various elements of our data pipeline - the `SensorData` table
+>    definition, lambda function, and so on - to enable sensors to write
+>    humidity related data to the pipeline (as a percentage).
+
+All I needed to do here was add the following snippet to the ingestion Lambda:
+
+```js
+  const humidity = obj.humidity;
+  if (humidity !== null) {
+    item.Item.Humidity = {
+      N: humidity.toString(),
+    };
+  }
+```
+

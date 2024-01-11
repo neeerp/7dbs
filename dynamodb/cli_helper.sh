@@ -9,6 +9,11 @@ call() {
   "$@"
 }
 
+STREAM_NAME=temperature-sensor-data
+STREAM_ARN=arn:aws:kinesis:us-east-1:179536148295:stream/temperature-sensor-data
+IAM_ROLE_NAME=kinesis-lambda-dynamodb
+ROLE_ARN=arn:aws:iam::179536148295:role/kinesis-lambda-dynamodb
+
 example=$1
 case $example in
   d1-create-shopping-cart)
@@ -106,6 +111,84 @@ case $example in
     call aws dynamodb put-item --table-name ShoppingCart \
       --item '{"ItemName": {"S": "Tickle Me Ernie"}}' \
       --condition-expression "attribute_not_exists(ItemName)"
+    ;;
+  d2-create-sensor-data)
+    call aws dynamodb create-table \
+      --cli-input-json file://sensor-data-table.json
+    ;;
+  d2-create-kinesis-stream)
+    call aws kinesis create-stream \
+      --stream-name ${STREAM_NAME} \
+      --shard-count 1
+    ;;
+  d2-describe-kinesis-stream)
+    call aws kinesis describe-stream \
+      --stream-name ${STREAM_NAME} \
+    ;;
+  d2-kinesis-put)
+    call aws kinesis put-record \
+      --stream-name ${STREAM_NAME} \
+      --partition-key sensor-data \
+      --cli-binary-format raw-in-base64-out \
+      --data "Baby's first Kinesis record"
+    ;;
+  d2-create-lambda-role)
+    call aws iam create-role \
+      --role-name ${IAM_ROLE_NAME} \
+      --assume-role-policy-document file://lambda-kinesis-role.json
+    call aws iam attach-role-policy \
+      --role-name ${IAM_ROLE_NAME} \
+      --policy-arn \
+        arn:aws:iam::aws:policy/service-role/AWSLambdaKinesisExecutionRole
+    call aws iam attach-role-policy \
+      --role-name ${IAM_ROLE_NAME} \
+      --policy-arn \
+        arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess
+    ;;
+
+  d2-get-role)
+    call aws iam get-role --role-name ${IAM_ROLE_NAME}
+    ;;
+
+  d2-upload-lambda)
+    call cp code/ProcessKinesisRecords.js ./
+    call zip ProcessKinesisRecords.zip ProcessKinesisRecords.js
+    aws lambda create-function \
+      --region us-east-1 \
+      --function-name ProcessKinesisRecords \
+      --zip-file fileb://ProcessKinesisRecords.zip \
+      --role ${ROLE_ARN} \
+      --handler ProcessKinesisRecords.kinesisHandler \
+      --runtime nodejs18.x
+    ;;
+  d2-test-lambda)
+    call aws lambda invoke \
+      --invocation-type RequestResponse \
+      --function-name ProcessKinesisRecords \
+      --cli-binary-format raw-in-base64-out \
+      --payload file://test-lambda-input.txt \
+      lambda-output.txt
+    ;;
+  d2-map-source)
+    call aws lambda create-event-source-mapping \
+      --function-name ProcessKinesisRecords \
+      --event-source-arn ${STREAM_ARN} \
+      --starting-position LATEST
+    ;;
+
+  d2-kinesis-put-real)
+    DATA=$(echo '{"sensor_id":"sensor-3","temperature":99.8,"current_time":123456790}' | base64 -w 0)
+    call aws kinesis put-record \
+      --stream-name ${STREAM_NAME} \
+      --partition-key sensor-data \
+      --data "$DATA"
+    ;;
+  d2-kinesis-put-humidity)
+    DATA=$(echo '{"sensor_id":"sensor-3","temperature":99.8,"current_time":123456790,"humidity":35}' | base64 -w 0)
+    call aws kinesis put-record \
+      --stream-name ${STREAM_NAME} \
+      --partition-key sensor-data \
+      --data "$DATA"
     ;;
   *)
     echo "Example $example does not exist."
