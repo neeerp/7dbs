@@ -184,3 +184,39 @@ All I needed to do here was add the following snippet to the ingestion Lambda:
   }
 ```
 
+
+## Day 3
+### Homework
+#### Find
+> 1. We added a GSI to our table. Read some docs to se how much space GSIs use.
+
+According to the DDB docs, the space used by a GSI is the sum of:
+- The size of the base table primary key (partition && sort)
+- The size of the index key attribute
+- The size of the projected attributes
+- 100 bytes of overhead per index item
+
+> 2. Which commands are and aren't supported in Athena SQL?
+
+The
+[docs](https://docs.aws.amazon.com/athena/latest/ug/other-notable-limitations.html)
+explicitly say `CREATE TABLE LIKE`, `DESCRIBE INPUT`, `DESCRIBE OUTPUT`, and
+`UPDATE` are not supported, while `MERGE` is only supported for transactional
+table formats. Stored procedures are also unsupported.
+
+You also can't sort more than the 32 bit max int with an `ORDER BY`, nor
+statically initialize an array with more than 254 arguments.
+
+#### Do
+> 1. In Day 2, we added humidity data to the mix. Make our input script spit
+>    out humidities too. Then create a new table in Athena and query it!
+
+Updated the script and I can see my new readings in DynamoDB... however I don't
+want to create a new Athena table. The export is going to take a while.
+
+> 2. Try modifying the data pipeline so that we write to a new table each day.
+
+// TODO (Skipping this for now; we'd probably want to either create some job
+that runs periodically to create new tables in advance, OR we check in the
+ingestion lambda if today's table exists yet and create it... (I wonder if you
+end up with races here though)).

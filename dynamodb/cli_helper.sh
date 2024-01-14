@@ -14,6 +14,8 @@ STREAM_ARN=arn:aws:kinesis:us-east-1:179536148295:stream/temperature-sensor-data
 IAM_ROLE_NAME=kinesis-lambda-dynamodb
 ROLE_ARN=arn:aws:iam::179536148295:role/kinesis-lambda-dynamodb
 
+BUCKET_NAME=s3://sensor-data-$USER
+
 example=$1
 case $example in
   d1-create-shopping-cart)
@@ -189,6 +191,41 @@ case $example in
       --stream-name ${STREAM_NAME} \
       --partition-key sensor-data \
       --data "$DATA"
+    ;;
+
+
+  d3-ingest)
+    for n in {1..10}; do
+      call ruby upload-sensor-data.rb sensor-${n} 1000 &
+    done
+    ;;
+  d3-kill)
+    call pgrep -f upload-sensor-data | xargs kill -9
+    ;;
+  d3-scan)
+    call aws dynamodb scan --table-name SensorData
+    ;;
+
+  d3-query-between-timestamps)
+    T1=$(aws dynamodb scan --table-name SensorData \
+      --query Items[0].CurrentTime.N | tr -d '"')
+    T2=$(aws dynamodb scan --table-name SensorData \
+      --query Items[200].CurrentTime.N | tr -d '"')
+    call aws dynamodb query --table-name SensorData \
+      --expression-attribute-values '{
+        ":t1": {"N": "'"$T1"'"},
+        ":t2": {"N": "'"$T2"'"},
+        ":sensorId": {"S": "sensor-1"}
+    }' \
+      --key-condition-expression \
+      'SensorId = :sensorId AND CurrentTime BETWEEN :t1 AND :t2' \
+      --projection-expression 'Temperature'
+    ;;
+  d3-count)
+    call aws dynamodb scan --table-name SensorData --query Count
+    ;;
+  d3-create-bucket)
+    call aws s3 mb ${BUCKET_NAME}
     ;;
   *)
     echo "Example $example does not exist."
